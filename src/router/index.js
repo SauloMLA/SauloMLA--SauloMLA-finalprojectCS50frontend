@@ -1,22 +1,32 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
-import Shark from '../components/Shark.vue';
+import Land from '../components/Land.vue';
 import Notes from '../components/Notes.vue';
-
-
+import Login from '../components/Login.vue';
+import Register from '../components/Register.vue';
 
 Vue.use(VueRouter);
 
 const routes = [
   {
-    path: '/shark',
-    name: 'Shark',
-    component: Shark
+    path: '/',
+    name: 'Land',
+    component: Land
   },
   {
     path: '/notes',
     name: 'Notes',
     component: Notes
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: Login
+  },
+  {
+    path: '/register',
+    name: 'Register',
+    component: Register
   },
 ];
 

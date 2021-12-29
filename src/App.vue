@@ -1,12 +1,18 @@
 <template>
   <div id="app">
-    
     <router-view />
   </div>
+  
 </template>
 
 <style>
-  #app {
-    margin-top: 60px;
+  body{
+    min-height: 100%;
+    background-color: #F7F7F9!important;
   }
 </style>
+
+
+
+
+

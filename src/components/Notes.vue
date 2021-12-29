@@ -1,15 +1,30 @@
 <template>
+    <div>
+    <Navbar/>
     <div class="jumbotron vertical-center">
         <div class="container">
-            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@4.5.2/dist/sketchy/bootstrap.min.css" integrity="sha384-RxqHG2ilm4r6aFRpGmBbGTjsqwfqHOKy1ArsMhHusnRO47jcGqpIQqlQK/kmGy9R" crossorigin="anonymous">
+           <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@4.5.2/dist/lux/bootstrap.min.css" integrity="sha384-9+PGKSqjRdkeAU7Eu4nkJU8RFaH8ace8HGXnkiKMP9I9Te0GJ4/km3L1Z8tXigpG" crossorigin="anonymous">
             <div class="row">
                 <div class="col-sm-12">
-                    <h1 class="text-center bg-primary text-white" style="border-radius:10px;">Notes </h1>
+                    <h1 class="text-center" style="border-radius:10px;">Notes </h1>
                     <hr><br>
-                    <!-- Alert Message soon -->
-                    <b-alert variant="success" v-if="showMessage" show>{{message}}</b-alert>
+
                     <button type="button" class="btn btn-success" v-b-modal.note-modal>Add Note</button>
                     <br><br>
+                    <b-form @submit="onSubmitCategory" @reset="onResetCategory" inline>
+                        <label class="mb-2 mr-sm-2 mb-sm-0" for="input-8">Category: </label>
+                        <b-form-select
+                        id="input-8"
+                        class="mb-2 mr-sm-2 mb-sm-0"
+                        v-model="searchForm.category"
+                        :options="categories"
+                        required
+                        ></b-form-select>
+                        <b-button type="submit" class="mb-2 mr-sm-2 mb-sm-0 btn btn-warning">Submit</b-button>
+                        <b-button type="reset" class="mb-2 mr-sm-2 mb-sm-0 btn btn-danger">Reset</b-button>
+                    </b-form>
+                    <br>
+                    <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
                             <tr>
@@ -21,10 +36,10 @@
                         </thead>
                         <tbody>
                             <tr v-for="note, index in notes" :key="index">
-                                <td>{{note.title}}</td>
-                                <td>{{note.category}}</td>
+                                <td>{{note[1]}}</td>
+                                <td>{{note[2]}}</td>
                                 <td>
-                                    <span v-if="note.done">Yes</span>
+                                    <span v-if="note[3] == true">Yes</span>
                                     <span v-else>No</span>
                                 </td>
                                 <td>
@@ -36,7 +51,8 @@
                             </tr>
                         </tbody>
                     </table>
-                    <footer class="bg-primary text-white text-center" style="border-radius:10px;"> Copyright &copy; - All Rights Reserved 2021
+                    </div>
+                    <footer class="text-center" style="border-radius:10px;"> Copyright &copy; - All Rights Reserved 2021
 
                     </footer>
                 </div>
@@ -54,9 +70,7 @@
                     </b-form-group>
 
                     <b-form-group id="form-done-group">
-                        <b-form-checkbox-group id="form-checks" v-model="addNoteForm.done">
-                            <b-form-checkbox value="true">Done?</b-form-checkbox>
-                        </b-form-checkbox-group>
+                            <b-form-checkbox id="form-checks" v-model="addNoteForm.done">Done?</b-form-checkbox>
                     </b-form-group>
 
                     <b-button type="submit" variant="outline-info">Submit</b-button>
@@ -76,9 +90,7 @@
                     </b-form-group>
 
                     <b-form-group id="form-done-edit-group">
-                        <b-form-checkbox-group id="form-checks" v-model="editForm.done">
-                            <b-form-checkbox value="true">Done?</b-form-checkbox>
-                        </b-form-checkbox-group>
+                            <b-form-checkbox id="form-checks" v-model="editForm.done">Done?</b-form-checkbox>
                     </b-form-group>
 
                     <b-button type="submit" variant="outline-info">Update</b-button>
@@ -87,34 +99,70 @@
             </b-modal>
         </div>
     </div>
+</div>
 </template>
 
+
+
 <script>
+import Navbar from '@/components/Navbar';
 import axios from 'axios'
+import auth from "@/logic/auth";
 export default {
+    components: {
+        Navbar, 
+    },
     data() {
         return {
+            user : {
+                id: ''
+            },
             notes:[],
+            categories:[],
+            searchForm:{
+                category: ''
+            },
             addNoteForm: {
                 title: '',
                 category: "",
-                done: false,
+                done: 0,
             },
             editForm : {
                 id: "",
                 title: '',
                 category: "",
-                done: false,
-            }
+                done: 0,
+            },
         };
     },
     message: "",
+    
     methods:{
         getNotes(){
-            const path = 'http://127.0.0.1:5000/notes';
+            const path = `http://127.0.0.1:5000/notes?userId=${this.user.id}`;
             axios.get(path)
             .then((res) => {
                 this.notes = res.data.notes;
+            })
+            .catch((err) => {
+                console.error(err);
+            });
+        },
+        getNotesByCategory(payload){
+            const path = `http://127.0.0.1:5000/categories?userId=${this.user.id}`;
+            axios.post(path, payload)
+            .then((res) => {
+                this.notes = res.data.notes;
+            })
+            .catch((err) => {
+                console.error(err);
+            });
+        },
+        getCategories(){
+            const path = `http://127.0.0.1:5000/categories?userId=${this.user.id}`;
+            axios.get(path)
+            .then((res) => {
+                this.categories = res.data.categories;
             })
             .catch((err) => {
                 console.error(err);
@@ -126,22 +174,40 @@ export default {
             .then(() => {
                 this.getNotes();
                 this.message = "Note Saved !"
-                this.showMessage = true;
+                this.$swal("Success", this.message, "success").then(function() {
+                window.location = "/notes";
+                });
             })
             .catch((err) => {
                 console.error(err);
                 this.getNotes();
             });
         },
-        
         initForm(){
             this.addNoteForm.title = "",
             this.addNoteForm.category = "",
-            this.addNoteForm.done = false;
+            this.addNoteForm.done = 0;
             this.editForm.id = "",
             this.editForm.title = "",
             this.editForm.category = "",
-            this.editForm.done = false;
+            this.editForm.done = 0;
+        },
+        onSubmitCategory(e){
+            e.preventDefault();
+            const payload = {
+                 category: this.searchForm.category[0],
+            };
+            this.getNotesByCategory(payload)
+        },
+        onResetCategory(e){
+            e.preventDefault();
+            this.getNotes()
+            this.searchForm.category = '';
+        },
+        onReset(e){
+            e.preventDefault();
+            this.$refs.addNoteModal.hide();
+            this.initForm();
         },
         onSubmit(e){
             e.preventDefault();
@@ -151,16 +217,11 @@ export default {
                  title: this.addNoteForm.title,
                  category: this.addNoteForm.category,
                  done: this.addNoteForm.done,
+                 userId: this.user.id
             };
             this.addNote(payload);
             this.initForm();
         },
-        onReset(e){
-            e.preventDefault();
-            this.$refs.addNoteModal.hide();
-            this.initForm();
-        },
-
         onSubmitUpdate(e){
             e.preventDefault();
             this.$refs.editNoteModal.hide();
@@ -177,8 +238,10 @@ export default {
             axios.put(path, payload)
             .then(() => {
                 this.getNotes();
-                this.message = "Note updated!"
-                this.showMessage = true;
+                this.message = "Note updated "
+               this.$swal("Success", this.message, "success").then(function() {
+                window.location = "/notes";
+               });
             })
             .catch((err) => {
                 console.error(err);
@@ -186,7 +249,11 @@ export default {
             });
         },
         editNote(note){
-            this.editForm = note;
+            this.editForm.id = note[0]
+            this.editForm.title = note[1]
+            this.editForm.category = note[2]
+            var isDone = note[3] == 1 ? true : false
+            this.editForm.done = isDone
         },
         onResetUpdate(e) {
             e.preventDefault();
@@ -194,27 +261,55 @@ export default {
             this.initForm();
             this.getNotes(); 
         },
-    removeNote(noteID) {
+        removeNote(noteID) {
         const path = `http://localhost:5000/notes/${noteID}`;
         axios.delete(path)
         .then(() => {
             this.getNotes();
             this.message = 'Note Removed 🗑️!';
-            this.showMessage = true;
+            this.$swal("Success", this.message, "success").then(function() {
+                window.location = "/notes";
+            });
         })
         .catch((error) => {
             // eslint-disable-next-line
             console.error(error);
             this.getNotes();
         });
-    },
-    // Handle Delete Button
-    deleteNote(note) {
-        this.removeNote(note.id);
-    },
+        },
+        // Handle Delete Button
+        deleteNote(note) {
+        this.removeNote(note[0]);
+        },
+        userLogged() {
+            const res = auth.getUserLogged();
+            return res
+        }
     },
     created(){
-        this.getNotes();
+        let user = this.userLogged();
+        if (!user){
+            this.$swal({
+                title: 'Error',
+                icon: 'error',
+                html: 'You need to login to see this page',
+                showCloseButton: true,
+                showCancelButton: false,
+                focusConfirm: false,
+                confirmButtonColor: 'red',
+            }).then(function() {
+                window.location = "/login";
+            });
+        }
+        else{
+            user = JSON.parse(user)
+            this.userName = user.name;
+            this.user.id = user.id;
+            
+            this.getNotes();
+            this.getCategories();
+        }
     }
 };
 </script>
+
