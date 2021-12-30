@@ -1,17 +1,19 @@
 <template>
-  <div>
-      <Navbar/>
-    <div class="hero">
-        <div class="center-aligned">
-            <b-img :src="image" fluid class="background-image"></b-img>
-            <div class="text"><h1>Notes WebApp</h1>
+    <div class="all">
+    <Navbar/>
+      <div class="cover" :style="{backgroundImage: 'url(' + require('@/assets/2.jpg') + ')' }">
+        <p class="titulo">Notes WebApp</p>
+        <div class="buttonContainer">
+          <a href="/login">
+            <button class="btn btn-info button">Log In</button>
+          </a>
+          <a href="/register" >
+             <button class="btn btn-info button">Sign up</button>
+          </a>
+         
         </div>
+      </div>
     </div>
-    </div>
-    <!-- Part Two, Little description about me and no forget the copyright -->
-    <footer class="text-center" style="border-radius:10px;"> Copyright &copy; - All Rights Reserved 2021 </footer>
-  </div>
-  
 </template>
 
 <script>
@@ -32,26 +34,33 @@
 </script>
 
 <style>
+  .all{
+    display: flex;
+    flex-direction: column;
+    height:100vh;
+  }
+  .cover{
+    flex: 1;
+    flex-direction: column;
+    box-shadow:inset 0 0 0 2000px rgba(0, 0, 0, 0.658);
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .titulo{
+    text-align: center;
+    color: white;
+    font-size: 4rem;
+    font-weight: bold;
+  }
 
-
-.center-aligned {
-  display: box;
-  display: flex;
-  box-align: center;
-  align-items: center;
-  box-pack: center;
-  justify-content: center;
-}
-
-.background-image {
-  position: relative;
-}
-
-.text {
-  position: absolute;  
-  left: 50%;                        
-  top: 50%;                         
-  transform: translate(-50%, -50%); 
-  color: white;
-}
+  .buttonContainer{
+    display: flex;
+    justify-content: space-between;
+  }
+  .button{
+    margin-right: 10px;
+    font-size: 1.2rem!important;
+  }
 </style>

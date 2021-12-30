@@ -52,7 +52,7 @@
                         </tbody>
                     </table>
                     </div>
-                    <footer class="text-center" style="border-radius:10px;"> Copyright &copy; - All Rights Reserved 2021
+                    <footer class="text-center" style="border-radius:10px;"> Copyright Saulo Mario Alaniz Leon &copy; - All Rights Reserved 2021
 
                     </footer>
                 </div>
@@ -64,8 +64,19 @@
                         <b-form-input id="form-title-input" type="text" v-model="addNoteForm.title" required placeholder="Enter Note">
                         </b-form-input>
                     </b-form-group>
-                    <b-form-group id="form-category-group" label="Category :" label-for="form-category-input">
-                        <b-form-input id="form-category-input" type="text" v-model="addNoteForm.category" required placeholder="Enter Category">
+                        <b-form-group label="Category :">
+                            <b-form-select
+                            id="input-8"
+                            v-model="addNoteForm.category"
+                            :options="categories"
+                            required
+                            >
+                            <b-form-select-option value="Other">Other</b-form-select-option>
+                            </b-form-select>
+                        </b-form-group>
+                        
+                    <b-form-group id="form-category-group" label="New Category :" label-for="form-category-input" v-if="addNoteForm.category == 'Other'">
+                        <b-form-input id="form-category-input" type="text" v-model="addNoteForm.categoryOther" required placeholder="Enter Category">
                         </b-form-input>
                     </b-form-group>
 
@@ -84,8 +95,20 @@
                         <b-form-input id="form-title-edit-input" type="text" v-model="editForm.title" required placeholder="Enter Note">
                         </b-form-input>
                     </b-form-group>
-                    <b-form-group id="form-edit-category-group" label="Category :" label-for="form-category-edit-input">
-                        <b-form-input id="form-category-edit-input" type="text" v-model="editForm.category" required placeholder="Enter Category">
+                    <b-form-group label="Category :">
+                            <b-form-select
+                            id="input-8-edit"
+                            v-model="editForm.category"
+                            required
+                            >
+                            <b-form-select-option v-for="(categoryS, index) in categories" :value="categoryS[0]" :key="index">{{categoryS[0]}}</b-form-select-option>
+                            <b-form-select-option value="Other">Other</b-form-select-option>
+
+                            </b-form-select>
+                        </b-form-group>
+                        
+                    <b-form-group id="form-edit-category-group" label="New Category :" label-for="form-category-edit-input" v-if="editForm.category == 'Other'" >
+                        <b-form-input id="form-category-edit-input" type="text" v-model="editForm.categoryOther" required placeholder="Enter Category">
                         </b-form-input>
                     </b-form-group>
 
@@ -125,12 +148,14 @@ export default {
             addNoteForm: {
                 title: '',
                 category: "",
+                categoryOther: "",
                 done: 0,
             },
             editForm : {
                 id: "",
                 title: '',
                 category: "",
+                categoryOther: "",
                 done: 0,
             },
         };
@@ -174,9 +199,8 @@ export default {
             .then(() => {
                 this.getNotes();
                 this.message = "Note Saved !"
-                this.$swal("Success", this.message, "success").then(function() {
-                window.location = "/notes";
-                });
+                this.$swal("Success", this.message, "success")
+                
             })
             .catch((err) => {
                 console.error(err);
@@ -185,12 +209,16 @@ export default {
         },
         initForm(){
             this.addNoteForm.title = "",
-            this.addNoteForm.category = "",
+            this.addNoteForm.category = [],
+            this.addNoteForm.categoryOther = "",
             this.addNoteForm.done = 0;
             this.editForm.id = "",
             this.editForm.title = "",
-            this.editForm.category = "",
+            this.editForm.category = [],
+            this.editForm.categoryOther = "",
             this.editForm.done = 0;
+            this.getCategories(),
+            this.searchForm.category = ""
         },
         onSubmitCategory(e){
             e.preventDefault();
@@ -212,10 +240,15 @@ export default {
         onSubmit(e){
             e.preventDefault();
             this.$refs.addNoteModal.hide();
-
+            var selectedCategory = '';
+            if (this.addNoteForm.category == "Other") {
+                selectedCategory = this.addNoteForm.categoryOther
+            }else {
+                selectedCategory = this.addNoteForm.category
+            }
             const payload = {
                  title: this.addNoteForm.title,
-                 category: this.addNoteForm.category,
+                 category: selectedCategory,
                  done: this.addNoteForm.done,
                  userId: this.user.id
             };
@@ -225,9 +258,15 @@ export default {
         onSubmitUpdate(e){
             e.preventDefault();
             this.$refs.editNoteModal.hide();
+            var selectedCategory = '';
+            if (this.editForm.category == "Other") {
+                selectedCategory = this.editForm.categoryOther
+            }else {
+                selectedCategory = this.editForm.category
+            }
             const payload = {
                  title: this.editForm.title,
-                 category: this.editForm.category,
+                 category: selectedCategory,
                  done: this.editForm.done,
             };
             this.updateNote(payload, this.editForm.id);
@@ -239,9 +278,8 @@ export default {
             .then(() => {
                 this.getNotes();
                 this.message = "Note updated "
-               this.$swal("Success", this.message, "success").then(function() {
-                window.location = "/notes";
-               });
+                this.$swal("Success", this.message, "success")
+                this.initForm();
             })
             .catch((err) => {
                 console.error(err);
@@ -252,8 +290,10 @@ export default {
             this.editForm.id = note[0]
             this.editForm.title = note[1]
             this.editForm.category = note[2]
+            this.editForm.categoryOther = ''
             var isDone = note[3] == 1 ? true : false
             this.editForm.done = isDone
+            
         },
         onResetUpdate(e) {
             e.preventDefault();
@@ -267,9 +307,8 @@ export default {
         .then(() => {
             this.getNotes();
             this.message = 'Note Removed 🗑️!';
-            this.$swal("Success", this.message, "success").then(function() {
-                window.location = "/notes";
-            });
+            this.$swal("Success", this.message, "success")
+            this.initForm();
         })
         .catch((error) => {
             // eslint-disable-next-line
